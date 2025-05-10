@@ -30,7 +30,9 @@ class NoSQLBaseDocument(BaseModel, Generic[T], ABC):
 
     @classmethod
     def from_mongo(cls: Type[T], data: dict) -> T:
-        """Convert "_id" (str object) into "id" (UUID object)."""
+        """Convert "_id" (str object) into "id" (UUID object).
+        transforms a dictionary retrieved from MongoDB into an instance of the class
+        """
 
         if not data:
             raise ValueError("Data is empty.")
@@ -40,11 +42,15 @@ class NoSQLBaseDocument(BaseModel, Generic[T], ABC):
         return cls(**dict(data, id=id))
 
     def to_mongo(self: T, **kwargs) -> dict:
-        """Convert "id" (UUID object) into "_id" (str object)."""
+        """Convert "id" (UUID object) into "_id" (str object).
+        converts the model instance into a dictionary suitable for MongoDB insertion:
+        """
         exclude_unset = kwargs.pop("exclude_unset", False)
         by_alias = kwargs.pop("by_alias", True)
 
-        parsed = self.model_dump(exclude_unset=exclude_unset, by_alias=by_alias, **kwargs)
+        parsed = self.model_dump(
+            exclude_unset=exclude_unset, by_alias=by_alias, **kwargs
+        )
 
         if "_id" not in parsed and "id" in parsed:
             parsed["_id"] = str(parsed.pop("id"))
@@ -65,6 +71,9 @@ class NoSQLBaseDocument(BaseModel, Generic[T], ABC):
         return dict_
 
     def save(self: T, **kwargs) -> T | None:
+        """
+        allows an instance of the model to be inserted into a MongoDB collection
+        """
         collection = _database[self.get_collection_name()]
         try:
             collection.insert_one(self.to_mongo(**kwargs))
@@ -77,6 +86,9 @@ class NoSQLBaseDocument(BaseModel, Generic[T], ABC):
 
     @classmethod
     def get_or_create(cls: Type[T], **filter_options) -> T:
+        """
+        attempts to find a document in the database matching the provided filter options
+        """
         collection = _database[cls.get_collection_name()]
         try:
             instance = collection.find_one(filter_options)
@@ -88,12 +100,16 @@ class NoSQLBaseDocument(BaseModel, Generic[T], ABC):
 
             return new_instance
         except errors.OperationFailure:
-            logger.exception(f"Failed to retrieve document with filter options: {filter_options}")
+            logger.exception(
+                f"Failed to retrieve document with filter options: {filter_options}"
+            )
 
             raise
 
     @classmethod
     def bulk_insert(cls: Type[T], documents: list[T], **kwargs) -> bool:
+        """
+        allows multiple documents to be inserted into the database at once"""
         collection = _database[cls.get_collection_name()]
         try:
             collection.insert_many(doc.to_mongo(**kwargs) for doc in documents)
@@ -106,6 +122,8 @@ class NoSQLBaseDocument(BaseModel, Generic[T], ABC):
 
     @classmethod
     def find(cls: Type[T], **filter_options) -> T | None:
+        """
+        searches for a single document in the database that matches the given filter options:"""
         collection = _database[cls.get_collection_name()]
         try:
             instance = collection.find_one(filter_options)
@@ -120,10 +138,19 @@ class NoSQLBaseDocument(BaseModel, Generic[T], ABC):
 
     @classmethod
     def bulk_find(cls: Type[T], **filter_options) -> list[T]:
+        """
+        retrieves multiple documents matching the filter options.
+        It converts each retrieved MongoDB document into a model instance,
+        collecting them into a list
+        """
         collection = _database[cls.get_collection_name()]
         try:
             instances = collection.find(filter_options)
-            return [document for instance in instances if (document := cls.from_mongo(instance)) is not None]
+            return [
+                document
+                for instance in instances
+                if (document := cls.from_mongo(instance)) is not None
+            ]
         except errors.OperationFailure:
             logger.error("Failed to retrieve documents")
 
@@ -131,6 +158,9 @@ class NoSQLBaseDocument(BaseModel, Generic[T], ABC):
 
     @classmethod
     def get_collection_name(cls: Type[T]) -> str:
+        """
+        determines the name of the MongoDB collection associated with the class.
+        """
         if not hasattr(cls, "Settings") or not hasattr(cls.Settings, "name"):
             raise ImproperlyConfigured(
                 "Document should define an Settings configuration class with the name of the collection."

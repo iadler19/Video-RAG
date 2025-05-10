@@ -3,100 +3,85 @@ from loguru import logger
 from llm_engineering.domain.base import NoSQLBaseDocument, VectorBaseDocument
 from llm_engineering.domain.types import DataCategory
 
-from .chunking_data_handlers import (
-    ArticleChunkingHandler,
-    ChunkingDataHandler,
-    PostChunkingHandler,
-    RepositoryChunkingHandler,
-)
-from .cleaning_data_handlers import (
-    ArticleCleaningHandler,
-    CleaningDataHandler,
-    PostCleaningHandler,
-    RepositoryCleaningHandler,
-)
+
 from .embedding_data_handlers import (
-    ArticleEmbeddingHandler,
     EmbeddingDataHandler,
-    PostEmbeddingHandler,
     QueryEmbeddingHandler,
-    RepositoryEmbeddingHandler,
+    VideoClipEmbeddingHandler,
 )
 
 
-class CleaningHandlerFactory:
-    @staticmethod
-    def create_handler(data_category: DataCategory) -> CleaningDataHandler:
-        if data_category == DataCategory.POSTS:
-            return PostCleaningHandler()
-        elif data_category == DataCategory.ARTICLES:
-            return ArticleCleaningHandler()
-        elif data_category == DataCategory.REPOSITORIES:
-            return RepositoryCleaningHandler()
-        else:
-            raise ValueError("Unsupported data type")
+# class CleaningHandlerFactory:
+#     @staticmethod
+#     def create_handler(data_category: DataCategory) -> CleaningDataHandler:
+#         if data_category == DataCategory.POSTS:
+#             return PostCleaningHandler()
+#         elif data_category == DataCategory.ARTICLES:
+#             return ArticleCleaningHandler()
+#         elif data_category == DataCategory.REPOSITORIES:
+#             return RepositoryCleaningHandler()
+#         else:
+#             raise ValueError("Unsupported data type")
 
 
-class CleaningDispatcher:
-    factory = CleaningHandlerFactory()
+# class CleaningDispatcher:
+#     factory = CleaningHandlerFactory()
 
-    @classmethod
-    def dispatch(cls, data_model: NoSQLBaseDocument) -> VectorBaseDocument:
-        data_category = DataCategory(data_model.get_collection_name())
-        handler = cls.factory.create_handler(data_category)
-        clean_model = handler.clean(data_model)
+#     @classmethod
+#     def dispatch(cls, data_model: NoSQLBaseDocument) -> VectorBaseDocument:
+#         data_category = DataCategory(data_model.get_collection_name())
+#         handler = cls.factory.create_handler(data_category)
+#         clean_model = handler.clean(data_model)
 
-        logger.info(
-            "Document cleaned successfully.",
-            data_category=data_category,
-            cleaned_content_len=len(clean_model.content),
-        )
+#         logger.info(
+#             "Document cleaned successfully.",
+#             data_category=data_category,
+#             cleaned_content_len=len(clean_model.content),
+#         )
 
-        return clean_model
-
-
-class ChunkingHandlerFactory:
-    @staticmethod
-    def create_handler(data_category: DataCategory) -> ChunkingDataHandler:
-        if data_category == DataCategory.POSTS:
-            return PostChunkingHandler()
-        elif data_category == DataCategory.ARTICLES:
-            return ArticleChunkingHandler()
-        elif data_category == DataCategory.REPOSITORIES:
-            return RepositoryChunkingHandler()
-        else:
-            raise ValueError("Unsupported data type")
+#         return clean_model
 
 
-class ChunkingDispatcher:
-    factory = ChunkingHandlerFactory
-
-    @classmethod
-    def dispatch(cls, data_model: VectorBaseDocument) -> list[VectorBaseDocument]:
-        data_category = data_model.get_category()
-        handler = cls.factory.create_handler(data_category)
-        chunk_models = handler.chunk(data_model)
-
-        logger.info(
-            "Document chunked successfully.",
-            num=len(chunk_models),
-            data_category=data_category,
-        )
-
-        return chunk_models
+# class ChunkingHandlerFactory:
+#     @staticmethod
+#     def create_handler(data_category: DataCategory) -> ChunkingDataHandler:
+#         if data_category == DataCategory.POSTS:
+#             return PostChunkingHandler()
+#         elif data_category == DataCategory.ARTICLES:
+#             return ArticleChunkingHandler()
+#         elif data_category == DataCategory.REPOSITORIES:
+#             return RepositoryChunkingHandler()
+#         else:
+#             raise ValueError("Unsupported data type")
 
 
+# class ChunkingDispatcher:
+#     factory = ChunkingHandlerFactory
+
+#     @classmethod
+#     def dispatch(cls, data_model: VectorBaseDocument) -> list[VectorBaseDocument]:
+#         data_category = data_model.get_category()
+#         handler = cls.factory.create_handler(data_category)
+#         chunk_models = handler.chunk(data_model)
+
+#         logger.info(
+#             "Document chunked successfully.",
+#             num=len(chunk_models),
+#             data_category=data_category,
+#         )
+
+#         return chunk_models
+
+
+## --------- KEEP THIS ------------
 class EmbeddingHandlerFactory:
     @staticmethod
     def create_handler(data_category: DataCategory) -> EmbeddingDataHandler:
         if data_category == DataCategory.QUERIES:
             return QueryEmbeddingHandler()
-        if data_category == DataCategory.POSTS:
-            return PostEmbeddingHandler()
-        elif data_category == DataCategory.ARTICLES:
-            return ArticleEmbeddingHandler()
-        elif data_category == DataCategory.REPOSITORIES:
-            return RepositoryEmbeddingHandler()
+        if data_category == DataCategory.CLIPS:
+            return VideoClipEmbeddingHandler()
+
         else:
             raise ValueError("Unsupported data type")
 
@@ -114,7 +99,7 @@ class EmbeddingDispatcher:
 
         if len(data_model) == 0:
             return []
-
+        print(type(data_model[0]))
         data_category = data_model[0].get_category()
         assert all(
             data_model.get_category() == data_category for data_model in data_model

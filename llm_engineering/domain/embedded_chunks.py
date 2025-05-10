@@ -31,27 +31,29 @@ class EmbeddedChunk(VectorBaseDocument, ABC):
         return context
 
 
-class EmbeddedPostChunk(EmbeddedChunk):
-    class Config:
-        name = "embedded_posts"
-        category = DataCategory.POSTS
-        use_vector_index = True
-
-
-class EmbeddedArticleChunk(EmbeddedChunk):
-    link: str
-
-    class Config:
-        name = "embedded_articles"
-        category = DataCategory.ARTICLES
-        use_vector_index = True
-
-
-class EmbeddedRepositoryChunk(EmbeddedChunk):
-    name: str
-    link: str
+class EmbeddedVideoClipChunk(VectorBaseDocument):
+    title: str
+    url: str
+    start_time: float
+    end_time: float
+    content: str
+    embedding: list[float] | None
+    metadata: dict = Field(default_factory=dict)
 
     class Config:
-        name = "embedded_repositories"
-        category = DataCategory.REPOSITORIES
+        name = "embedded_clips"
+        category = DataCategory.CLIPS
         use_vector_index = True
+
+    @classmethod
+    def to_context(cls, chunks: list["EmbeddedVideoClipChunk"]) -> str:
+        context = ""
+        for i, chunk in enumerate(chunks):
+            context += f"""
+            Clip {i + 1}:
+            Title: {chunk.title}
+            URL: {chunk.url}
+            Time: {chunk.start_time:.2f}s - {chunk.end_time:.2f}s
+            Content: {chunk.content.strip()}\n
+            """
+        return context.strip()

@@ -5,16 +5,12 @@ from llm_engineering.application.rag.retriever import ContextRetriever
 from llm_engineering.infrastructure.opik_utils import configure_opik
 
 if __name__ == "__main__":
-    configure_opik()
-    set_verbose(True)
+    # configure_opik()
+    # set_verbose(True)
 
     query = """
-        My name is Paul Iusztin.
-        
-        Could you draft a LinkedIn post discussing RAG systems?
-        I'm particularly interested in:
-            - how RAG works
-            - how it is integrated with vector DBs and large language models (LLMs).
+            Using only the videos, explain the advantages of 
+            CNNs over fully connected networks.
         """
 
     retriever = ContextRetriever(mock=False)

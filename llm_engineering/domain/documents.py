@@ -7,43 +7,15 @@ from .base import NoSQLBaseDocument
 from .types import DataCategory
 
 
-class UserDocument(NoSQLBaseDocument):
-    first_name: str
-    last_name: str
+class VideoClipDocument(NoSQLBaseDocument):
+    title: str
+    url: str
+    start_time: float
+    end_time: float
+    content: str
 
     class Settings:
-        name = "users"
-
-    @property
-    def full_name(self):
-        return f"{self.first_name} {self.last_name}"
+        name = DataCategory.CLIPS
 
 
-class Document(NoSQLBaseDocument, ABC):
-    content: dict
-    platform: str
-    author_id: UUID4 = Field(alias="author_id")
-    author_full_name: str = Field(alias="author_full_name")
-
-
-class RepositoryDocument(Document):
-    name: str
-    link: str
-
-    class Settings:
-        name = DataCategory.REPOSITORIES
-
-
-class PostDocument(Document):
-    image: Optional[str] = None
-    link: str | None = None
-
-    class Settings:
-        name = DataCategory.POSTS
-
-
-class ArticleDocument(Document):
-    link: str
-
-    class Settings:
-        name = DataCategory.ARTICLES
+# --- I can delete these later ---
