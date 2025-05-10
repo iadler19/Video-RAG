@@ -11,7 +11,9 @@ This is the demo video: https://youtu.be/Nap7_p9Ktj0
 to run the pipline run these commands 
 
 poetry poe local-infrastructure-up
+
 poetry poe run-digital-data-etl-video  
+
 poetry poe run-feature-engineering-pipeline  
 
 then run the gradio_app.ipynb and on the gradio ui in a browser 
